@@ -1,0 +1,10 @@
+stages:
+  - compile
+
+image: golang:1.13
+
+comp:
+  stage: compile
+  script:
+  - make build
+
