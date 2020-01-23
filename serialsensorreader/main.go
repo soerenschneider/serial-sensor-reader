@@ -18,7 +18,7 @@ func main() {
 	config := parseArgs()
 
 	setupLogging(config)
-	config.printConfig()
+	config.printParsedValues()
 	initializeMetrics()
 	go startPrometheusMetricsServer(config.prometheusAddress)
 
@@ -44,7 +44,7 @@ func main() {
 }
 
 func (b *serialSensorReader) cleanup(output chan string) {
-	b.sensor.Interrupt()
+	b.sensor.StopReading()
 	log.Info("Stopped reading from serial device")
 	b.mqtt.Disconnect()
 	log.Info("Disconnected from mqtt")

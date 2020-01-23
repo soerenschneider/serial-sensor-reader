@@ -21,10 +21,29 @@ type mqttBackend struct {
 	clientId string
 }
 
+func NewMqttBackend(conf *sensorReaderConfig) (*mqttBackend, error) {
+	if nil == conf {
+		return nil, errors.New("nil sensorReaderConfig supplied")
+	}
+
+	uri, err := url.Parse(conf.mqttUri)
+	if err != nil {
+		return nil, err
+	}
+
+	mqttBackend := &mqttBackend{
+		uri:    uri,
+	}
+
+	err = mqttBackend.connect(conf)
+	return mqttBackend, err
+}
+
 func (b *mqttBackend) connect(conf *sensorReaderConfig) error {
 	opts := createClientOptions(conf, b.uri)
 
 	client := mqtt.NewClient(opts)
+	log.Info("Trying to connect to broker")
 	token := client.Connect()
 	for !token.WaitTimeout(connectTimeoutSec * time.Second) {
 	}
@@ -58,24 +77,6 @@ func createClientOptions(conf *sensorReaderConfig, uri *url.URL) *mqtt.ClientOpt
 	})
 
 	return opts
-}
-
-func NewMqttBackend(conf *sensorReaderConfig) (*mqttBackend, error) {
-	if nil == conf {
-		return nil, errors.New("nil sensorReaderConfig supplied")
-	}
-	
-	uri, err := url.Parse(conf.mqttUri)
-	if err != nil {
-		return nil, err
-	}
-
-	mqttBackend := &mqttBackend{
-		uri:    uri,
-	}
-
-	err = mqttBackend.connect(conf)
-	return mqttBackend, err
 }
 
 func (b *mqttBackend) Disconnect() {

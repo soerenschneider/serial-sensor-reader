@@ -8,6 +8,14 @@ import (
 	"strings"
 )
 
+const (
+	defaultMqttTopic = "sensors/light/%s"
+	defaultSerialDevice = "/dev/ttyUSB0"
+	defaultBaudRate = 9600
+	defaultPrometheusAddress = ":9191"
+	defaultLoglevel = "INFO"
+)
+
 type sensorReaderConfig struct {
 	mqttUri           string
 	mqttTopic         string
@@ -31,8 +39,9 @@ func (c *sensorReaderConfig) getMqttClientId() string {
 	return fmt.Sprintf("sensorreader-%s-%s", c.sensorName, c.sensorLocation)
 }
 
-func (c *sensorReaderConfig) printConfig() {
+func (c *sensorReaderConfig) printParsedValues() {
 	log.Infof("Started using configuration:")
+	log.Info("---------")
 	log.Infof("mqttUri=%s", c.mqttUri)
 	log.Infof("mqttTopic=%s", c.mqttTopic)
 	log.Infof("sensorName=%s", c.sensorName)
@@ -41,18 +50,18 @@ func (c *sensorReaderConfig) printConfig() {
 	log.Infof("baudRate=%d", c.baudRate)
 	log.Infof("loglevel=%s", c.loglevel)
 	log.Infof("prometheusAddress=%s", c.prometheusAddress)
-	log.Info("")
+	log.Info("---------")
 }
 
 func parseArgs() *sensorReaderConfig {
 	parser := argparse.NewParser("serial sensor data reader", "reads data from a serial sensor and publishes it via mqtt")
 
 	mqttUri := parser.String("m", "mqtt-host", &argparse.Options{Required: true, Help: "uri of the mqtt broker. Example: mqtt://remote-host:1883"})
-	mqttTopic := parser.String("t", "mqtt-topic", &argparse.Options{Default: "sensors/light/%s", Help: "MQTT topic to send the data to"})
-	serialDevice := parser.String("s", "serial-device", &argparse.Options{Default: "/dev/ttyUSB0", Required: false, Help: "The serial device to read sensor data from"})
-	baudRate := parser.Int("b", "baud-rate", &argparse.Options{Default: 9600, Required: false, Help: "The baud rate to use for the serial communication"})
-	loglevel := parser.Selector("", "loglevel", []string{"INFO", "DEBUG", "WARN"}, &argparse.Options{Default: "INFO", Help: "Debugging loglevel to use"})
-	prometheusAddress := parser.String("", "prometheus-address", &argparse.Options{Default: ":9191", Required: false, Help: "Address to use"})
+	mqttTopic := parser.String("t", "mqtt-topic", &argparse.Options{Default: defaultMqttTopic, Help: "MQTT topic to send the data to"})
+	serialDevice := parser.String("s", "serial-device", &argparse.Options{Default: defaultSerialDevice, Required: false, Help: "The serial device to read sensor data from"})
+	baudRate := parser.Int("b", "baud-rate", &argparse.Options{Default: defaultBaudRate, Required: false, Help: "The baud rate to use for the serial communication"})
+	loglevel := parser.Selector("", "loglevel", []string{"INFO", "DEBUG", "WARN"}, &argparse.Options{Default: defaultLoglevel, Help: "Debugging loglevel to use"})
+	prometheusAddress := parser.String("", "prometheus-address", &argparse.Options{Default: defaultPrometheusAddress, Required: false, Help: "Address to use"})
 	sensorName := parser.String("n", "sensor-name", &argparse.Options{Required: true, Help: "A descriptive name of the sensor that is read"})
 	sensorLocation := parser.String("l", "sensor-location", &argparse.Options{Required: true, Help: "The location of the sensor"})
 

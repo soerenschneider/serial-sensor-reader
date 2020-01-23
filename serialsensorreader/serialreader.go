@@ -14,8 +14,8 @@ const (
 )
 
 type serialReader struct {
-	config *serial.Config
-	scrape bool
+	config          *serial.Config
+	continueReading bool
 }
 
 func NewSerialReader(device string, baud int) (*serialReader, error) {
@@ -24,7 +24,7 @@ func NewSerialReader(device string, baud int) (*serialReader, error) {
 		return nil, err
 	}
 
-	return &serialReader{config: c, scrape: true}, nil
+	return &serialReader{config: c, continueReading: true}, nil
 }
 
 func testConfig(config *serial.Config) error {
@@ -39,8 +39,8 @@ func testConfig(config *serial.Config) error {
 	return err
 }
 
-func (serialReader *serialReader) Interrupt() {
-	serialReader.scrape = false
+func (serialReader *serialReader) StopReading() {
+	serialReader.continueReading = false
 }
 
 func (serialReader *serialReader) ReadSensorData(output chan string) {
@@ -59,7 +59,7 @@ func (serialReader *serialReader) ReadSensorData(output chan string) {
 }
 
 func (serialReader *serialReader) fromReader(output chan string, rd io.Reader) error {
-	for serialReader.scrape {
+	for serialReader.continueReading {
 		reader := bufio.NewReader(rd)
 		buf, err := reader.ReadBytes(delimiter)
 		if err != nil {
