@@ -1,0 +1,13 @@
+name: "serial-sensor-reader"
+arch: "amd64"
+platform: "linux"
+version: "v${MY_APP_VERSION}"
+section: "default"
+priority: "extra"
+maintainer: "Sören Schneider"
+description: "Reads sensor data from a serial device and publishes it via MQTT."
+homepage: "https://gitlab.com/soerenschneider/serial-sensor-reader"
+license: "Apache License 2.0"
+bindir: "/usr/local/bin"
+files:
+  ./build/serial-sensor-reader: "/usr/local/bin/serial-sensor-reader"
