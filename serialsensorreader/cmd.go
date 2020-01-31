@@ -1,9 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"github.com/akamensky/argparse"
 	log "github.com/sirupsen/logrus"
+	"net/url"
 	"os"
 	"strings"
 )
@@ -17,7 +19,7 @@ const (
 )
 
 type sensorReaderConfig struct {
-	mqttUri           string
+	mqttUri           *url.URL
 	mqttTopic         string
 	sensorName        string
 	sensorLocation    string
@@ -71,8 +73,13 @@ func parseArgs() *sensorReaderConfig {
 		os.Exit(1)
 	}
 
+	uri, err := parseUrl(*mqttUri)
+	if err != nil {
+		log.Fatalf("Invalid broker url supplied: %s", err.Error())
+	}
+
 	return &sensorReaderConfig{
-		mqttUri:           *mqttUri,
+		mqttUri:           uri,
 		mqttTopic:         *mqttTopic,
 		serialDevice:      *serialDevice,
 		baudRate:          *baudRate,
@@ -81,4 +88,21 @@ func parseArgs() *sensorReaderConfig {
 		sensorName:        *sensorName,
 		sensorLocation:    *sensorLocation,
 	}
+}
+
+func parseUrl(rawUrl string) (*url.URL, error) {
+	uri, err := url.Parse(rawUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(uri.Port()) == 0 {
+		return nil, errors.New("can not connect to broker, no port supplied")
+	}
+
+	if len(uri.Scheme) == 0 {
+		return nil, errors.New("can not connect to broker, no scheme supplied")
+	}
+
+	return uri, nil
 }

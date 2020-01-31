@@ -26,16 +26,11 @@ func NewMqttBackend(conf *sensorReaderConfig) (*mqttBackend, error) {
 		return nil, errors.New("nil sensorReaderConfig supplied")
 	}
 
-	uri, err := url.Parse(conf.mqttUri)
-	if err != nil {
-		return nil, err
-	}
-
 	mqttBackend := &mqttBackend{
-		uri:    uri,
+		uri:    conf.mqttUri,
 	}
 
-	err = mqttBackend.connect(conf)
+	err := mqttBackend.connect(conf)
 	return mqttBackend, err
 }
 
