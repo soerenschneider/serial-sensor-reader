@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"github.com/akamensky/argparse"
@@ -8,10 +9,11 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"text/template"
 )
 
 const (
-	defaultMqttTopic = "sensors/light/%s"
+	defaultMqttTopic = "sensors/{{ .Name }}/{{ .Location }}"
 	defaultSerialDevice = "/dev/ttyUSB0"
 	defaultBaudRate = 9600
 	defaultPrometheusAddress = ":9191"
@@ -72,7 +74,9 @@ func parseArgs() *sensorReaderConfig {
 		fmt.Print(parser.Usage(err))
 		os.Exit(1)
 	}
-
+	
+	topic := getTopic(*mqttTopic, *sensorName, *sensorLocation)
+	fmt.Println(topic)
 	uri, err := parseUrl(*mqttUri)
 	if err != nil {
 		log.Fatalf("Invalid broker url supplied: %s", err.Error())
@@ -80,7 +84,7 @@ func parseArgs() *sensorReaderConfig {
 
 	return &sensorReaderConfig{
 		mqttUri:           uri,
-		mqttTopic:         *mqttTopic,
+		mqttTopic:         topic,
 		serialDevice:      *serialDevice,
 		baudRate:          *baudRate,
 		loglevel:          *loglevel,
@@ -88,6 +92,26 @@ func parseArgs() *sensorReaderConfig {
 		sensorName:        *sensorName,
 		sensorLocation:    *sensorLocation,
 	}
+}
+
+func getTopic(templateString, sensorName, sensorLocation string) string {
+	tmpl, err := template.New("mqttTopic").Parse(templateString)
+	buf := &bytes.Buffer{}
+
+	data := struct {
+		Name string
+		Location string
+	}{
+		sensorName,
+		sensorLocation,
+	}
+	
+	err = tmpl.Execute(buf, data)
+	if err != nil {
+		fmt.Printf("Couldn't process template: %s", err.Error())
+		os.Exit(1)
+	}
+	return buf.String()
 }
 
 func parseUrl(rawUrl string) (*url.URL, error) {
