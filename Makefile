@@ -1,7 +1,10 @@
 .PHONY: build
 build:
 	if [ ! -d build ]; then mkdir build; fi
-	CGO_ENABLED=0 go build -o build/serial-sensor-reader ./serialsensorreader 
+	go build -o build/serial-sensor-reader ./serialsensorreader
+
+tests:
+	true
 
 raspberry:
 	if [ ! -d build ]; then mkdir build; fi
